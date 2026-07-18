@@ -433,12 +433,18 @@ def alert(fare: Fare, reason: str) -> None:
         print(msg)
 
 
+# Discord (and Slack) sit behind Cloudflare, which 403s the default urllib
+# User-Agent ("Python-urllib/x.y"). Sending a real UA is required, not optional.
+# .strip() guards against a stray newline pasted into the webhook secret.
+_ALERT_UA = "flight-watcher/1.0 (+https://github.com/DarshGuptaP/flight-tracker)"
+
+
 def _post_discord(text: str) -> None:
     body = json.dumps({"content": text}).encode()
     urllib.request.urlopen(
         urllib.request.Request(
-            os.environ["DISCORD_WEBHOOK_URL"], data=body,
-            headers={"Content-Type": "application/json"},
+            os.environ["DISCORD_WEBHOOK_URL"].strip(), data=body,
+            headers={"Content-Type": "application/json", "User-Agent": _ALERT_UA},
         ),
         timeout=15,
     )
@@ -448,8 +454,8 @@ def _post_slack(text: str) -> None:
     body = json.dumps({"text": text}).encode()
     urllib.request.urlopen(
         urllib.request.Request(
-            os.environ["SLACK_WEBHOOK_URL"], data=body,
-            headers={"Content-Type": "application/json"},
+            os.environ["SLACK_WEBHOOK_URL"].strip(), data=body,
+            headers={"Content-Type": "application/json", "User-Agent": _ALERT_UA},
         ),
         timeout=15,
     )

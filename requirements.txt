@@ -1,0 +1,10 @@
+# Google Flights live cross-check (Lane B watchlist + Lane A veto).
+# Optional at runtime: _google_min_price() catches ImportError and returns
+# None, so a missing/broken scraper degrades to Travelpayouts-only rather
+# than breaking the run.
+fast-flights
+
+# fast-flights imports this but does not always pull it in on a clean install.
+# Without it, `import fast_flights` raises ModuleNotFoundError (a subclass of
+# ImportError), which the try/except swallows -> Google silently never fires.
+typing_extensions

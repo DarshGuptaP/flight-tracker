@@ -1,0 +1,60 @@
+name: flight-watch
+
+# Schedule + manual button. No push trigger, so the state commit can't
+# re-trigger the workflow.
+on:
+  schedule:
+    # hourly at :17. Off-the-hour on purpose: GitHub delays/drops scheduled
+    # jobs most heavily at :00. Go to "*/30 * * * *" for every 30 min, but note
+    # more frequent = more Google scraping = higher block risk from Actions IPs.
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write        # to commit state.json back
+
+concurrency:
+  group: flight-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run watcher
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          ALERT_SINK: discord
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # Slack: set ALERT_SINK: slack + SLACK_WEBHOOK_URL secret.
+          # Telegram: set ALERT_SINK: telegram + TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID.
+          ORIGINS: "SFO,SJC"
+          STATE_PATH: state.json
+          USE_GOOGLE: "1"          # set "0" to skip all Google (cross-check + watchlist)
+          GOOGLE_ENRICH_TOP: "3"   # cheapest N per origin to live-check (trimmed to give the watchlist more scraper budget)
+          WATCH_TRIP_LEN: "3"      # nights per watchlist probe
+          # WATCH_OFFSETS default "3,10,17,24,38,52,66" - days-out probed,
+          # one per run, rotated by run counter so hourly runs sweep the horizon.
+        run: python flight_watcher.py
+
+      - name: Persist price history
+        run: |
+          if [[ -n "$(git status --porcelain state.json)" ]]; then
+            git config user.name  "flight-watch-bot"
+            git config user.email "flight-watch-bot@users.noreply.github.com"
+            git add state.json
+            git commit -m "chore: update price history [skip ci]"
+            git push
+          else
+            echo "no state change to commit"
+          fi

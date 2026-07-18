@@ -1,0 +1,14 @@
+[
+  { "route": "SFO-HNL", "floor": 250 },
+  { "route": "SFO-LHR", "floor": 400 },
+  { "route": "SFO-CDG", "floor": 400 },
+  { "route": "SFO-NRT", "floor": 500 },
+  { "route": "SFO-FCO", "floor": 450 },
+  { "route": "SFO-BCN", "floor": 450 },
+  { "route": "SFO-CUN", "floor": 300 },
+  { "route": "SFO-JFK", "floor": 180 },
+  "SFO-SEA",
+  { "route": "SJC-HNL", "floor": 250 },
+  "SJC-JFK",
+  "SJC-SAN"
+]

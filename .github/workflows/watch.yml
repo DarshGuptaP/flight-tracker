@@ -40,8 +40,17 @@ jobs:
           # Telegram: set ALERT_SINK: telegram + TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID.
           ORIGINS: "SFO,SJC"
           STATE_PATH: state.json
+          # Deal strictness. rare | balanced | aggressive - see PROFILES in the
+          # script. Any single knob (MIN_DISCOUNT_PCT, MAX_PCT_RANK,
+          # MIN_SAVING_USD, MIN_SCORE, MAX_ALERTS_PER_RUN) still overrides it.
+          # Replay history against a profile before switching:
+          #     PROFILE=rare python flight_watcher.py --backtest
+          PROFILE: "balanced"
+          # Only alert on fares Google confirms live. Set "0" to fall back to
+          # treating Google as a stale-fare veto only.
+          REQUIRE_LIVE: "1"
           USE_GOOGLE: "1"          # set "0" to skip all Google (cross-check + watchlist)
-          GOOGLE_ENRICH_TOP: "3"   # cheapest N per origin to live-check (trimmed to give the watchlist more scraper budget)
+          GOOGLE_ENRICH_TOP: "3"   # top N per origin BY SCORE to live-check (trimmed to give the watchlist more scraper budget)
           WATCH_TRIP_LEN: "3"      # nights per watchlist probe
           # WATCH_OFFSETS default "3,10,17,24,38,52,66" - days-out probed,
           # one per run, rotated by run counter so hourly runs sweep the horizon.
